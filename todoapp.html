@@ -1,0 +1,142 @@
+<html>
+    <head>
+        <link rel="stylesheet" type="text/css" href="./todoapp.css">
+      </head>
+    <body>
+        <div class="header">
+            <h1 class="title">TODO APP</h1>
+        </div>
+        <div class="container">
+            <label>Nova Tarefa:</label>
+            <div>
+                <input id="input-descricao" type="text" />
+                <button onclick="addTarefa()">Adicionar Tarefa</button>
+            </div>
+            <label class="label-lista-tarefas">Lista de tarefa:</label>
+            <select id="combo_fitro" onchange="onChangeFiltro()">
+                <option value="1" selected>Ambos</option>
+                <option value="2">Completas</option>
+                <option value="3">Incompletas</option>
+            </select>
+            <div id="lista-tarefas-container" />
+        </div>
+    </body>
+
+    <script>
+        var idTarefas = 0;
+        var tarefas = [];
+
+        function addTarefa() {
+            const descricaoInput = document.getElementById('input-descricao');
+
+            idTarefas += 1;
+
+            const novaTarefa = {
+                id: idTarefas,
+                descricao: descricaoInput.value,
+                completa: false,
+                emEdicao: false
+            }
+
+            tarefas.push(novaTarefa);
+
+            renderListaTarefas();
+
+            descricaoInput.value = '';
+        }
+
+        function editarTarefa(idTarefa) {
+            let tarefa = tarefas.find(function(tar) {
+                return tar.id === idTarefa;
+            });
+
+            tarefa.emEdicao = true
+
+            renderListaTarefas();
+        }
+
+        function salvarTarefa(idTarefa, idInput) {
+            let tarefa = tarefas.find(function(tar) {
+                return tar.id === idTarefa;
+            });
+
+            tarefa.descricao = document.getElementById(idInput).value;
+            tarefa.emEdicao = false;
+
+            renderListaTarefas();
+        }
+
+        function removerTarefa(idTarefa) {
+            tarefas = tarefas.filter(function(tar) {
+                return tar.id !== idTarefa;
+            });
+
+            renderListaTarefas();
+        }
+
+        function completarTarefa(idTarefa, completa) {
+            let tarefa = tarefas.find(function(tar) {
+                return tar.id === idTarefa;
+            });
+
+            tarefa.completa = completa;
+
+            renderListaTarefas();
+        }
+
+        function getTarefas(completas) {
+            if(completas === null) {
+                return tarefas;
+            }
+
+            return tarefas.filter(function(tar) {
+                return tar.completa === completas
+            });
+        }
+
+        function renderListaTarefas() {
+            const combo = document.getElementById('combo_fitro');
+            const filtroSelecionado = combo.options[combo.selectedIndex].value;
+
+            let completas = null;
+
+            if(filtroSelecionado === '1') {
+                completas = null;
+            } else if(filtroSelecionado === '2') {
+                completas = true;
+            } else if(filtroSelecionado === '3') {
+                completas = false;
+            }
+
+            const tarefasParaRenderizar = getTarefas(completas);
+
+            const html = tarefasParaRenderizar.map(function(tarefa) {
+                const idInput = `input_edit_tarefa_${tarefa.id}`;
+
+                return `
+                    <div>
+                        <span>${tarefa.id}</span>
+                        ${tarefa.emEdicao ? `
+                            <input id="${idInput}" type="text" value="${tarefa.descricao}" />
+                        ` : `
+                            <label class="${tarefa.completa ? 'stroke' : ''}">${tarefa.descricao}</label>
+                        `}
+                        ${tarefa.emEdicao ? `
+                            <button onclick="salvarTarefa(${tarefa.id}, '${idInput}')">Salvar</button>
+                        ` : `
+                            <button onclick="editarTarefa(${tarefa.id})">Editar</button>
+                        `}
+                        <button onclick="removerTarefa(${tarefa.id})">Deletar</button>
+                        <button onclick="completarTarefa(${tarefa.id}, ${!tarefa.completa})">${tarefa.completa ? 'Incompleta' : 'Completar'}</button>
+                    </div>
+                `;
+            }).join('');
+
+            document.getElementById('lista-tarefas-container').innerHTML = html;
+        }
+
+        function onChangeFiltro() {
+            renderListaTarefas();
+        }
+    </script>
+</html>
